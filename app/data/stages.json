@@ -1,0 +1,23 @@
+{
+  "Young Bud": {
+    "description": "Early bud formation stage; the flower bud is small, tightly closed, and still developing",
+    "typical_days_to_harvest": "approximately 35-45 days remaining (highly cultivar and climate dependent)"
+  },
+  "Mature Bud": {
+    "description": "Bud has grown larger and begins to show yellow petal tips just before opening",
+    "typical_days_to_harvest": "approximately 25-35 days remaining"
+  },
+  "Early Bloom": {
+    "description": "Flower has just opened; outer ray petals visible, disk florets not yet fully mature",
+    "typical_days_to_harvest": "approximately 20-30 days remaining"
+  },
+  "Full Bloom": {
+    "description": "Flower head fully open, petals fully extended, disk florets maturing",
+    "typical_days_to_harvest": "approximately 15-25 days remaining"
+  },
+  "Wilted": {
+    "description": "Petals have dried and dropped, flower head is drooping and turning brown/yellow - this is the natural late-stage appearance when seeds are approaching maturity",
+    "typical_days_to_harvest": "approximately 0-10 days remaining if this stage is due to natural maturity",
+    "verify_note": "IMPORTANT: this stage can also be caused prematurely by disease stress rather than true maturity - in the combined mode, cross-check against disease detection before trusting this harvest estimate"
+  }
+}

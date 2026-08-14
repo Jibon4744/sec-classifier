@@ -1,0 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;800&display=swap');
+
+body, .gradio-container {
+    font-family: 'Inter', sans-serif !important;
+    background-color: #fafbfc !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', 'Inter', sans-serif !important;
+}
+
+.primary {
+    background: linear-gradient(135deg, #FFB300 0%, #F57C00 100%) !important;
+    border: none !important;
+    color: white !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.primary:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 5px 15px rgba(245, 124, 0, 0.3) !important;
+}

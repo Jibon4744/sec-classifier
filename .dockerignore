@@ -1,0 +1,10 @@
+.git/
+.agents/
+.github/
+tests/
+venv/
+*.pyc
+__pycache__/
+*.log
+.env
+.ipynb_checkpoints/

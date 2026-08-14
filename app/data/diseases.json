@@ -1,0 +1,27 @@
+{
+  "Alternaria leaf spot": {
+    "cause": "Fungal disease (Alternaria helianthi), spreads in warm humid conditions, often via infected plant debris or wind-borne spores",
+    "treatment": "Remove and destroy infected leaves; apply a labeled fungicide (e.g. chlorothalonil or mancozeb based, verify locally approved products); avoid overhead irrigation to reduce leaf wetness; practice crop rotation",
+    "severity": "moderate to high if untreated - can cause significant leaf loss and yield reduction"
+  },
+  "Downy Mildew": {
+    "cause": "Oomycete pathogen (Plasmopara halstedii), favored by cool wet conditions, often soil-borne or seed-borne",
+    "treatment": "Use disease-resistant seed varieties where possible; apply metalaxyl-based seed treatment preventively; improve field drainage; remove infected seedlings early",
+    "severity": "high - can cause systemic infection and significant stand loss if it strikes early"
+  },
+  "Powdery Mildew": {
+    "cause": "Fungal disease (Golovinomyces/Erysiphe species), favored by warm dry days with high humidity at night, common late in the season",
+    "treatment": "Apply sulfur-based or other labeled fungicide at first sign; improve air circulation via proper plant spacing; avoid excess nitrogen fertilization which promotes susceptible new growth",
+    "severity": "moderate - mainly reduces photosynthetic efficiency rather than causing rapid plant death"
+  },
+  "Wilted leaf": {
+    "cause": "Can result from multiple stresses: fungal/bacterial wilt pathogens, water stress, or root damage - visual wilting alone does not confirm a specific pathogen",
+    "treatment": "Assess soil moisture and irrigation first; if disease is suspected, inspect stem/root for discoloration and consult local agricultural extension for pathogen-specific diagnosis",
+    "severity": "variable - depends on underlying cause, ranging from temporary water stress to serious vascular disease"
+  },
+  "Healthy": {
+    "cause": "No disease detected",
+    "treatment": "No action needed - continue standard monitoring and care",
+    "severity": "none"
+  }
+}
