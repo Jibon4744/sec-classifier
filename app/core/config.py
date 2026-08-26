@@ -9,6 +9,14 @@ class Settings(BaseSettings):
     
     # Hugging Face Config
     HF_REPO_ID: str = "Jibon4744/SEC-sunflower-classifier"
+
+    # Directory where downloaded TFLite models are cached by huggingface_hub.
+    # When None, huggingface_hub uses HF_HOME (set in Dockerfile to
+    # /home/user/.cache/huggingface) so downloads persist across restarts.
+    HF_CACHE_DIR: str = ""
+
+    # Maximum time (seconds) to wait for a model download from HF Hub.
+    HF_HUB_DOWNLOAD_TIMEOUT: int = 300
     
     # LLM Config (configurable via environment variables)
     OPENAI_API_KEY: str = ""

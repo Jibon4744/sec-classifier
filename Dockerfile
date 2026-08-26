@@ -15,7 +15,9 @@ ENV HOME=/home/user \
     PATH=/home/user/.local/bin:$PATH \
     PYTHONPATH=/home/user/app \
     HF_HOME=/home/user/.cache/huggingface \
-    HF_HUB_DISABLE_SYMLINKS_WARNING=1
+    HF_HUB_DISABLE_SYMLINKS_WARNING=1 \
+    HF_HUB_DOWNLOAD_TIMEOUT=300 \
+    TRANSFORMERS_OFFLINE=0
 
 # Set the working directory
 WORKDIR $HOME/app

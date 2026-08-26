@@ -8,3 +8,6 @@ __pycache__/
 *.log
 .env
 .ipynb_checkpoints/
+# TFLite models are large (~123MB) and downloaded from HF Hub at startup;
+# exclude from Docker build context to keep image lean and builds fast.
+app/models/

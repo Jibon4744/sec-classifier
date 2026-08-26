@@ -19,6 +19,15 @@ except ImportError:
     except ImportError:
         raise ImportError("Neither tensorflow nor tflite-runtime is installed. Please install one of them.")
 
+# Import HF Hub download utility (used to fetch models on platforms
+# where local model files are not bundled in the deployment image)
+try:
+    from huggingface_hub import hf_hub_download
+    _hf_available = True
+except ImportError:
+    _hf_available = False
+    logger.warning("huggingface_hub is not installed; model download from HF Hub will not be available.")
+
 class ClassifierService:
     def __init__(self):
         self.repo_id = settings.HF_REPO_ID
@@ -61,21 +70,50 @@ class ClassifierService:
             return {}
 
     def preload_models(self):
-        """Instantiates TFLite Interpreters from local model files."""
+        """Instantiates TFLite Interpreters from model files.
+
+        Resolution order for each model file:
+        1. Local ``app/models/`` directory (development / bundled deployments).
+        2. Download from Hugging Face Hub (using ``huggingface_hub`` cache).
+
+        This dual strategy avoids bundling large binary model files into the
+        Docker image (which is unreliable on constrained CI/CD platforms such
+        as Render) while still allowing fast local iteration when the files
+        exist on disk.
+        """
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        models_dir = os.path.join(base_dir, "models")
+        local_models_dir = os.path.join(base_dir, "models")
+
         for key, filename in self.model_files.items():
-            if key not in self.interpreters:
-                logger.info(f"Loading model {key} ({filename})...")
-                try:
-                    model_path = os.path.join(models_dir, filename)
-                    interpreter = Interpreter(model_path=model_path)
-                    interpreter.allocate_tensors()
-                    self.interpreters[key] = interpreter
-                    logger.info(f"Successfully loaded and allocated {key}")
-                except Exception as e:
-                    logger.error(f"Failed to load model {key} from local disk: {e}")
-                    raise RuntimeError(f"Could not load model {key}: {e}")
+            if key in self.interpreters:
+                continue
+            logger.info(f"Loading model {key} ({filename})...")
+            try:
+                model_path = os.path.join(local_models_dir, filename)
+                if not os.path.isfile(model_path):
+                    if not _hf_available:
+                        raise FileNotFoundError(
+                            f"Model file '{filename}' not found locally and "
+                            f"huggingface_hub is not available to download it."
+                        )
+                    logger.info(
+                        f"Model file not found locally; downloading "
+                        f"{filename} from HF Hub ({self.repo_id})..."
+                    )
+                    download_kwargs = {
+                        "repo_id": self.repo_id,
+                        "filename": filename,
+                    }
+                    if settings.HF_CACHE_DIR:
+                        download_kwargs["cache_dir"] = settings.HF_CACHE_DIR
+                    model_path = hf_hub_download(**download_kwargs)
+                interpreter = Interpreter(model_path=model_path)
+                interpreter.allocate_tensors()
+                self.interpreters[key] = interpreter
+                logger.info(f"Successfully loaded and allocated {key}")
+            except Exception as e:
+                logger.error(f"Failed to load model {key}: {e}")
+                raise RuntimeError(f"Could not load model {key}: {e}")
 
     def _preprocess_image(self, image_input, target_size=(224, 224)) -> np.ndarray:
         """Resizes, scales, and prepares image for TFLite inference."""

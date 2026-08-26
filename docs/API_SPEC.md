@@ -2,6 +2,12 @@
 
 The Sunflower Ensemble Classifier (SEC) API is built using REST conventions on FastAPI. It exposes programmatic endpoints for crop classification under `/api/v1`.
 
+**Confidence semantics**: each `confidence` value is the weighted **geometric-mean**
+fusion of the four backbone models' softmax outputs (`ENSEMBLE_FUSION=geometric`
+in `app/core/config.py`). The score reflects agreement across the ensemble —
+crisp when the models converge, muted when they disagree. Set `ENSEMBLE_FUSION=mean`
+to restore a plain weighted average.
+
 ---
 
 ## 1. Endpoints
@@ -14,6 +20,9 @@ Diagnoses leaf diseases from an uploaded leaf image.
 *   **Request Headers**: `Content-Type: multipart/form-data`
 *   **Request Payload**:
     *   `file`: Binary file (image format: PNG, JPG, or JPEG)
+*   **Image Limits**: Uploads up to `MAX_IMAGE_PIXELS` (default 300 megapixels)
+    are accepted and resized to 224×224 before inference. Very high-resolution
+    camera photos (e.g. 200 MP) are supported.
 
 #### Response Example (`200 OK`)
 ```json
@@ -38,6 +47,10 @@ Analyzes flower growth stage and estimates harvest timeline from an uploaded flo
 *   **Request Headers**: `Content-Type: multipart/form-data`
 *   **Request Payload**:
     *   `file`: Binary file (image format: PNG, JPG, or JPEG)
+
+*   **Image Limits**: Uploads up to `MAX_IMAGE_PIXELS` (default 300 megapixels)
+    are accepted and resized to 224×224 before inference. Very high-resolution
+    camera photos (e.g. 200 MP) are supported.
 
 #### Response Example (`200 OK`)
 ```json

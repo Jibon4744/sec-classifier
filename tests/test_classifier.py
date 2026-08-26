@@ -45,6 +45,28 @@ class TestClassifierService(unittest.TestCase):
         self.assertAlmostEqual(float(np.sum(probs)), 1.0)
         self.assertTrue(probs[0, 2] > probs[0, 1] > probs[0, 0])
 
+    @patch('app.services.classifier._hf_available', True)
+    @patch('app.services.classifier.os.path.isfile', return_value=False)
+    @patch('app.services.classifier.hf_hub_download')
+    def test_preload_models_downloads_from_hf_when_local_missing(self, mock_hub_download, mock_isfile):
+        """Verifies preload_models falls back to HF Hub when local model files are absent."""
+        mock_hub_download.return_value = "/fake/cache/model.tflite"
+        with patch('app.services.classifier.Interpreter') as MockInterpreter:
+            mock_interp = MockInterpreter.return_value
+            self.service.preload_models()
+            self.assertEqual(mock_hub_download.call_count, 4)
+            self.assertEqual(mock_interp.allocate_tensors.call_count, 4)
+
+    @patch('app.services.classifier.os.path.isfile', return_value=True)
+    def test_preload_models_uses_local_when_present(self, mock_isfile):
+        """Verifies preload_models prefers local files and does not call HF Hub."""
+        with patch('app.services.classifier.Interpreter') as MockInterpreter:
+            mock_interp = MockInterpreter.return_value
+            with patch('app.services.classifier.hf_hub_download') as mock_hub_download:
+                self.service.preload_models()
+                mock_hub_download.assert_not_called()
+                self.assertEqual(mock_interp.allocate_tensors.call_count, 4)
+
     @patch.object(ClassifierService, '_run_ensemble_inference')
     def test_predict_disease(self, mock_inference):
         """Verifies subset prediction correctly extracts disease class and info."""

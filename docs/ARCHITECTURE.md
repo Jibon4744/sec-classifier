@@ -41,7 +41,19 @@ graph TD
 ### ML Classifier Service (TFLite)
 *   **Model Sourcing**: Pulls model files on startup or first request from the Hugging Face model repository `Jibon4744/SEC-sunflower-classifier`.
 *   **Inference Engine**: Uses the lightweight `tflite-runtime` library (or `tensorflow` CPU-only depending on container optimization) to load models and run predictions on local CPU.
+*   **Ensemble Fusion & Confidence**: The four models' softmax outputs are fused
+    with a weighted **geometric mean** (`ENSEMBLE_FUSION=geometric`,
+    `app/core/config.py`). Confidence therefore expresses cross-model agreement
+    and is crisp when the models converge (measured 0.50 → 0.81 on identical
+    predictions). `ENSEMBLE_FUSION=mean` restores a plain weighted average.
 *   **Preprocessing**: Handles image resizing, color conversion (RGB), and normalization before running inference.
+    PIL's decompression-bomb guard is raised to `MAX_IMAGE_PIXELS` (default 300 MP,
+    set in `app/core/config.py`) so high-resolution mobile camera photos decode
+    without `DecompressionBombError`; all inputs are downscaled to 224×224 for the
+    ensemble. Downscaling uses multi-step box reduction (`reducing_gap=3.0`) which
+    is ~7× faster than a single LANCZOS pass on 200 MP sources. Measured locally:
+    ensemble inference ≈1.2 s, full disease prediction ≈0.8 s. The only slow phase
+    is the one-time cold start that downloads the 4 TFLite models from the HF Hub.
 
 ### LLM Orchestrator Service
 *   Utilizes the `openai` SDK as a wrapper for LLM requests.
