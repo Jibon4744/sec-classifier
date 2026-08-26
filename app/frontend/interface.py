@@ -76,7 +76,7 @@ def build_interface() -> gr.Blocks:
                 gr.Markdown("<h3 style='color: #2c3e50;'>🍃 Leaf Disease Diagnosis</h3><p style='color: #7f8c8d; margin-top: -10px;'>Upload a leaf image to evaluate foliar health, pathogens, and treatment options.</p>")
                 with gr.Row():
                     with gr.Column():
-                        leaf_input = gr.Image(type="pil", label="Upload Leaf Image")
+                        leaf_input = gr.Image(type="filepath", label="Upload Leaf Image")
                         leaf_btn = gr.Button("Diagnose Leaf Health", variant="primary", elem_classes=["primary"])
                     with gr.Column():
                         leaf_output = gr.HTML(value="<div style='color: #7f8c8d; padding: 1rem; text-align: center;'>Results will be generated after uploading and clicking Diagnose.</div>", label="Diagnosis Report")
@@ -87,7 +87,7 @@ def build_interface() -> gr.Blocks:
                 gr.Markdown("<h3 style='color: #2c3e50;'>🌻 Growth Stage Analysis</h3><p style='color: #7f8c8d; margin-top: -10px;'>Upload an image of a sunflower head to identify the developmental stage and typical harvest windows.</p>")
                 with gr.Row():
                     with gr.Column():
-                        flower_input = gr.Image(type="pil", label="Upload Flower Head Image")
+                        flower_input = gr.Image(type="filepath", label="Upload Flower Head Image")
                         flower_btn = gr.Button("Analyze Growth Stage", variant="primary", elem_classes=["primary"])
                     with gr.Column():
                         flower_output = gr.HTML(value="<div style='color: #7f8c8d; padding: 1rem; text-align: center;'>Results will be generated after uploading and clicking Analyze.</div>", label="Timeline Report")
@@ -98,8 +98,8 @@ def build_interface() -> gr.Blocks:
                 gr.Markdown("<h3 style='color: #2c3e50;'>⚖️ Combined Agronomist Evaluation</h3><p style='color: #7f8c8d; margin-top: -10px;'>Provide both leaf and flower images from the same plant to evaluate if developmental characteristics are distorted by disease.</p>")
                 with gr.Row():
                     with gr.Column():
-                        comb_leaf_input = gr.Image(type="pil", label="Upload Leaf Image")
-                        comb_flower_input = gr.Image(type="pil", label="Upload Flower Head Image")
+                        comb_leaf_input = gr.Image(type="filepath", label="Upload Leaf Image")
+                        comb_flower_input = gr.Image(type="filepath", label="Upload Flower Head Image")
                         comb_btn = gr.Button("Run Combined Assessment", variant="primary", elem_classes=["primary"])
                     with gr.Column():
                         comb_output = gr.HTML(value="<div style='color: #7f8c8d; padding: 1rem; text-align: center;'>Virtual agronomist evaluation will be generated after providing both inputs.</div>", label="Agronomist Report")

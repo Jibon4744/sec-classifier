@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     # Maximum image size (in pixels) accepted for uploads. Raised above PIL's
     # default (178,956,970) so high-resolution mobile camera photos (e.g. 200 MP)
     # can be decoded. Higher values increase peak decode memory and DoS surface.
-    MAX_IMAGE_PIXELS: int = 20_000_000
+    MAX_IMAGE_PIXELS: int = 50_000_000
 
     # Ensemble fusion strategy for the 4-model TFLite ensemble:
     # "geometric" = weighted geometric mean (crisp confidence when models agree),

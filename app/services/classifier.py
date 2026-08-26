@@ -77,8 +77,16 @@ class ClassifierService:
                     logger.error(f"Failed to load model {key} from local disk: {e}")
                     raise RuntimeError(f"Could not load model {key}: {e}")
 
-    def _preprocess_image(self, image: Image.Image, target_size=(224, 224)) -> np.ndarray:
+    def _preprocess_image(self, image_input, target_size=(224, 224)) -> np.ndarray:
         """Resizes, scales, and prepares image for TFLite inference."""
+        if isinstance(image_input, str):
+            image = Image.open(image_input)
+            # Use draft to shrink JPEG/MPO immediately during decoding to save RAM
+            image.draft("RGB", target_size)
+            image.load()
+        else:
+            image = image_input
+
         # Convert to RGB if not already
         if image.mode != "RGB":
             image = image.convert("RGB")
@@ -154,9 +162,9 @@ class ClassifierService:
 
         return weighted_probs
 
-    def predict_disease(self, image: Image.Image) -> tuple[str, float, dict]:
+    def predict_disease(self, image_input) -> tuple[str, float, dict]:
         """Classifies disease by performing subset softmax over disease classes."""
-        img_array = self._preprocess_image(image)
+        img_array = self._preprocess_image(image_input)
         weighted_probs = self._run_ensemble_inference(img_array)
         
         # Extract indices and values for disease classes
@@ -181,9 +189,9 @@ class ClassifierService:
         
         return predicted_class, confidence, info
 
-    def predict_growth_stage(self, image: Image.Image) -> tuple[str, float, dict]:
+    def predict_growth_stage(self, image_input) -> tuple[str, float, dict]:
         """Classifies growth stage by performing subset softmax over stage classes."""
-        img_array = self._preprocess_image(image)
+        img_array = self._preprocess_image(image_input)
         weighted_probs = self._run_ensemble_inference(img_array)
         
         # Extract indices and values for stage classes
