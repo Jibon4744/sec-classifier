@@ -1,68 +1,156 @@
+# SEC — Sunflower Ensemble Classifier
+
+A deep learning system that classifies sunflower leaf disease and growth stage
+from images, combining a 4-model weighted CNN ensemble with an LLM reasoning
+layer — deployed as a full-stack, containerized web application.
+
+Originally developed as a B.Sc. thesis at Daffodil International University,
+then rebuilt end-to-end as a production-style application: model optimization,
+REST API, containerized deployment, and automated testing.
+
 ---
-title: Sunflower Ensemble Classifier (SEC)
-emoji: 🌻
-colorFrom: yellow
-colorTo: green
-sdk: docker
-app_port: 7860
-pinned: false
-license: mit
+
+## What it does
+
+Three modes, one app:
+
+| Mode | Input | Output |
+|---|---|---|
+| **Disease detection** | Leaf image | Disease class, confidence, cause & treatment (static reference data, no LLM) |
+| **Growth stage detection** | Flower/plant image | Growth stage, confidence, harvest-time estimate (static reference data, no LLM) |
+| **Combined analysis** | Leaf + flower image | Both classifications, plus an LLM-generated analysis of whether the growth-stage appearance is a reliable maturity signal or possibly distorted by the detected disease |
+
+The combined mode addresses a real observation from the underlying research:
+a plant can visually appear "aged" either because it's genuinely near
+harvest, or because disease has impaired photosynthesis and caused premature
+wilting — these look similar but mean very different things for a farmer
+deciding when to harvest.
+
 ---
 
-# Reusable project skeleton — how this works
+## Model performance
 
-This is a generic, tool-portable starter structure, distilled from a Cursor rule
-template (11 .mdc files covering an AI SaaS stack) and reorganized to:
-1. Work across Antigravity, Kilo Code, and OpenCode without duplication.
-2. Avoid loading irrelevant rules into every project.
-3. Match the actual Rules vs Skills vs Workflows distinction these tools use.
+| Model | Test accuracy |
+|---|---|
+| MobileNet | 83.02% |
+| ResNet50 | 83.77% |
+| EfficientNetV2S | 81.51% |
+| VGG16 | 79.62% |
+| **Weighted ensemble (SEC)** | **88.68%** (F1: 88.69%) |
 
-## What changed from the original Cursor template, and why
+The ensemble outperforms every individual base model. Weights are
+accuracy-proportional (`weight_i = accuracy_i / sum(accuracies)`), and the 4
+base models were selected for complementary per-class strengths, not just raw
+accuracy alone.
 
-The original had 11 rule files, all treated the same way. Reading them closely,
-they split into two very different kinds of content:
+---
 
-**Universal, stack-agnostic principles** (used to be 4 separate always-on files:
-global architect persona, security, testing, response style) — these don't
-depend on file type or project stack at all. They're now merged into AGENTS.md
-directly, since that's the one file every tool reads automatically, and there's
-no reason to keep re-deciding whether to include them — they always apply.
+## Engineering highlights
 
-**Stack-specific domain modules** (backend, frontend, database, cache, RAG,
-agents, devops — used to be 7 separate files) — these only matter if a given
-project actually has that concern. A CRUD app doesn't need RAG rules; a data
-science script doesn't need frontend rules. These now live in
-.agents/rule-library/ as reference material, NOT auto-loaded. At the start of
-each new project, the agent (via BOOTSTRAP_PROMPT.md) picks only the relevant
-ones, adapts the example stack names to the real stack, and copies them into
-.agents/rules/ — which IS auto-loaded.
+**Model optimization — verified, not assumed.** The 4 base models totaled
+~743MB in their original `.h5` format, too large for free-tier hosting. Each
+was converted to TFLite with float16 quantization and independently verified
+against its original before being trusted:
 
-## Folder structure
+| | Before | After | Reduction |
+|---|---|---|---|
+| MobileNet | 38.97 MB | 6.46 MB | 83% |
+| VGG16 | 176.7 MB | 29.5 MB | 83% |
+| EfficientNetV2S | 244.3 MB | 40.4 MB | 83% |
+| ResNet50 | 283.5 MB | 47.1 MB | 83% |
+| **Total** | **~743 MB** | **~123 MB** | **83%** |
+
+Each converted model was tested against its original `.h5` version on real
+sample images before adoption — 100% prediction agreement, maximum probability
+shift under 2%. Nothing was assumed to work; every optimization was measured.
+
+**Grounded LLM design.** The LLM layer (used only in combined mode) receives
+structured classification results, not raw images, and is explicitly
+instructed not to invent numeric estimates from its own memory — factual data
+(disease treatments, harvest-time ranges) comes from a static, human-curated
+reference table, not model generation. The LLM's role is narrowly scoped to
+reasoning and explanation over already-computed facts.
+
+**Automated testing.** 26 passing tests covering the API layer, the ensemble
+classifier service, and the LLM service (including error handling, malformed
+responses, and edge cases).
+
+**Containerized deployment.** FastAPI backend with a Gradio UI mounted
+directly onto the same app (single process, single container) — packaged with
+a hand-written `Dockerfile` and deployed via Hugging Face Spaces' Docker SDK
+for full control and portability, rather than relying on an opaque
+auto-generated container.
+
+---
+
+## Architecture
+
 ```
-AGENTS.md                  <- portable core (universal rules + per-project fill-in)
-docs/                       <- PRD, architecture, API spec, DB schema, deployment
-.agents/
-  rules/                    <- ACTIVE rules for the current project (starts empty)
-  rule-library/             <- REFERENCE only, not auto-loaded, pick from this per project
-  skills/                   <- reusable multi-step procedures, added as they emerge
-  workflows/                <- manual slash-command recipes, added as needed
-BOOTSTRAP_PROMPT.md          <- paste into the agentic IDE at the start of a new project
+Gradio UI (mounted on FastAPI)
+        |
+        v
+FastAPI backend  --->  Ensemble inference (4 TFLite models, weighted combine)
+        |                       |
+        |                       v
+        |               Hugging Face Hub (model storage)
+        v
+Static JSON lookup (modes 1 & 2)   OR   LLM reasoning layer (mode 3 only)
+        |
+        v
+   JSON response
 ```
 
-## Your workflow for every new project
-1. Copy this whole skeleton into the new project's root.
-2. Fill in the [BRACKETS] in BOOTSTRAP_PROMPT.md with a short project description.
-3. Paste BOOTSTRAP_PROMPT.md's content into Antigravity (or Kilo Code / OpenCode).
-4. Let the agent fill in docs/, AGENTS.md's project section, and pull the
-   relevant files from rule-library/ into rules/.
-5. Review what it generated before writing actual application code.
-6. As real reusable procedures emerge during development (a conversion script,
-   a deployment recipe, a testing pattern you'll reuse), ask the agent to
-   package them as a Skill in .agents/skills/ — don't pre-build these, let them
-   emerge from actual repeated work.
+## Tech stack
 
-## Why this survives switching tools or running out of quota
-AGENTS.md and the .agents/ directory convention are read by Antigravity, Kilo
-Code, and OpenCode without any reformatting needed. If a future tool only reads
-its own proprietary format, the content here is already organized cleanly
-enough to convert quickly — nothing here is locked to one platform's syntax.
+- **Backend:** FastAPI, Pydantic
+- **Models:** TensorFlow Lite (float16), served from Hugging Face Hub
+- **Frontend:** Gradio, mounted on the FastAPI app
+- **LLM layer:** structured prompt over classification outputs (combined mode only)
+- **Testing:** pytest (26 tests)
+- **Deployment:** Docker, Hugging Face Spaces (Docker SDK)
+
+## API
+
+| Endpoint | Purpose |
+|---|---|
+| `POST /predict/disease` | Leaf image → disease classification |
+| `POST /predict/growth-stage` | Flower image → growth-stage classification |
+| `POST /predict/combined` | Both images → both classifications + LLM analysis |
+| `GET /health` | Health check |
+
+Full request/response contracts in [`docs/API_SPEC.md`](docs/API_SPEC.md).
+
+## Project structure
+
+```
+app/
+├── api/            # FastAPI routes and schemas
+├── core/           # config, prompts
+├── data/           # disease_info.json, growth_stage_info.json
+├── services/       # classifier (ensemble), LLM service
+├── frontend/        # Gradio UI
+└── main.py
+tests/               # 26 tests across API, classifier, LLM service
+docs/                 # PRD, architecture, API spec, deployment notes
+Dockerfile
+```
+
+## Running locally
+
+```bash
+pip install -r requirements.txt
+python -m uvicorn app.main:app --host 127.0.0.1 --port 7860
+```
+Visit `http://127.0.0.1:7860`. Disease and growth-stage modes work
+immediately; combined mode requires an LLM API key set in `.env` (see
+`docs/DEPLOYMENT.md`).
+
+## Origin
+
+Built on top of a B.Sc. thesis: *"Deep Learning-Based Analysis & Classification
+of Sunflower Leaf Disease & Tracking Growth Stage Using CNN"* — Daffodil
+International University. Dataset (808 real field images collected in
+Bangladesh) available on Mendeley Data.
+
+## License
+[Add your chosen license]
