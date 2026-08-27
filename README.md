@@ -85,20 +85,13 @@ auto-generated container.
 
 ## Architecture
 
-```
-Gradio UI (mounted on FastAPI)
-        |
-        v
-FastAPI backend  --->  Ensemble inference (4 TFLite models, weighted combine)
-        |                       |
-        |                       v
-        |               Hugging Face Hub (model storage)
-        v
-Static JSON lookup (modes 1 & 2)   OR   LLM reasoning layer (mode 3 only)
-        |
-        v
-   JSON response
-```
+![Architecture diagram](docs/architecture-diagram.png)
+
+The frontend uploads an image to the FastAPI backend, which runs it through
+the ensemble inference module (4 TFLite models pulled from Hugging Face Hub,
+combined via `weights.json`). In combined mode, the ensemble output is passed
+to an optional GenAI layer that explains the result before the JSON response
+is returned.
 
 ## Tech stack
 
@@ -153,4 +146,4 @@ International University. Dataset (808 real field images collected in
 Bangladesh) available on Mendeley Data.
 
 ## License
-[Add your chosen license]
+Released under the [MIT License](LICENSE).
